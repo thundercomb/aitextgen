@@ -14,7 +14,7 @@ from pkg_resources import resource_filename
 from pytorch_lightning.plugins import DeepSpeedPlugin
 from tqdm.auto import trange
 from transformers import (
-    AutoConfig,
+    GPTJConfig,
     GPTJForCausalLM,
     AutoTokenizer,
     GPT2Config,
@@ -184,7 +184,7 @@ class aitextgen:
             # Manually construct a model from scratch
             logger.info("Constructing model from provided config.")
             if isinstance(config, str):
-                config = AutoConfig.from_pretrained(config)
+                config = GPTJConfig.from_pretrained(config)
             self.model = GPTJForCausalLM.from_config(config=config)
         else:
             # Download and cache model from Huggingface
