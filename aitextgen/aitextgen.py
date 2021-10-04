@@ -15,7 +15,7 @@ from pytorch_lightning.plugins import DeepSpeedPlugin
 from tqdm.auto import trange
 from transformers import (
     AutoConfig,
-    AutoModelForCausalLM,
+    GPTJForCausalLM,
     AutoTokenizer,
     GPT2Config,
     GPT2LMHeadModel,
@@ -177,23 +177,23 @@ class aitextgen:
             logger.info(
                 f"Loading model from provided weights and config in /{model_folder}."
             )
-            self.model = AutoModelForCausalLM.from_pretrained(
-                model_folder, local_files_only=True
+            self.model = GPTJForCausalLM.from_pretrained(
+                model_folder, revision="float16", low_cpu_mem_usage=True, local_files_only=True
             )
         elif config:
             # Manually construct a model from scratch
             logger.info("Constructing model from provided config.")
             if isinstance(config, str):
                 config = AutoConfig.from_pretrained(config)
-            self.model = AutoModelForCausalLM.from_config(config=config)
+            self.model = GPTJForCausalLM.from_config(config=config)
         else:
             # Download and cache model from Huggingface
             if os.path.isdir(cache_dir) and len(os.listdir(cache_dir)) > 0:
                 logger.info(f"Loading {model or 'gpt2'} model from /{cache_dir}.")
             else:
                 logger.info(f"Downloading {model or 'gpt2'} model to /{cache_dir}.")
-            self.model = AutoModelForCausalLM.from_pretrained(
-                model or "gpt2", cache_dir=cache_dir
+            self.model = GPTJForCausalLM.from_pretrained(
+                model or "gpt2", revision="float16", low_cpu_mem_usage=True, cache_dir=cache_dir
             )
             if model and "gpt2" not in model:
                 logger.info(f"Using the tokenizer for {model}.")
@@ -747,6 +747,7 @@ class aitextgen:
 
         if n_gpu > 1:
             train_params["distributed_backend"] = "ddp"
+            train_params["accelerator"] = "ddp"
 
         trainer = pl.Trainer(**train_params)
         trainer.fit(train_model)
